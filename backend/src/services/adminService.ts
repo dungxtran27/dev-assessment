@@ -150,23 +150,30 @@ const getNotificationRecipients = async (
       `,
       [normalizedTeacher],
     );
-
     (registeredRows as any[]).forEach((row: any) => recipients.add(row.email));
 
-    // Add mentioned emails if valid and not suspended
-    const normalizedMentions = mentionedEmails.map((email) =>
-      normalizeEmail(email),
-    );
-    for (const email of normalizedMentions) {
-      if (isValidEmail(email)) {
-        const [studentRows] = await connection.execute(
-          "SELECT suspended FROM students WHERE email = ?",
-          [email],
-        );
-        if (
-          (studentRows as any[]).length === 0 ||
-          !(studentRows as any[])[0].suspended
-        ) {
+    // Normalize mentions
+    const normalizedMentions = mentionedEmails
+      .map((email) => normalizeEmail(email))
+      .filter((email) => isValidEmail(email));
+
+    if (normalizedMentions.length > 0) {
+      // Batch query all mentioned emails at once
+      const placeholders = normalizedMentions.map(() => "?").join(",");
+      const [studentRows] = await connection.execute(
+        `SELECT email, suspended FROM students WHERE email IN (${placeholders})`,
+        normalizedMentions,
+      );
+
+      const suspendedMap = new Map<string, boolean>();
+      (studentRows as any[]).forEach((row: any) =>
+        suspendedMap.set(row.email, row.suspended),
+      );
+
+      // Add mentions if not suspended or not in DB
+      for (const email of normalizedMentions) {
+        const suspended = suspendedMap.get(email);
+        if (suspended === undefined || suspended === false) {
           recipients.add(email);
         }
       }
