@@ -12,24 +12,7 @@ const registerStudents = async (
 ): Promise<void> => {
   const normalizedTeacher = normalizeEmail(teacher);
 
-  if (!isValidEmail(normalizedTeacher)) {
-    throw new errorHandlerMiddleware.AppError(400, "Invalid teacher email");
-  }
-
-  if (!Array.isArray(students) || students.length === 0) {
-    throw new errorHandlerMiddleware.AppError(
-      400,
-      "Students list must contain at least one email",
-    );
-  }
-
   const normalizedStudents = students.map((student) => normalizeEmail(student));
-  if (normalizedStudents.some((student) => !isValidEmail(student))) {
-    throw new errorHandlerMiddleware.AppError(
-      400,
-      "Invalid student email in list",
-    );
-  }
 
   const connection = await pool.getConnection();
   try {
@@ -66,17 +49,7 @@ const registerStudents = async (
 };
 
 const getCommonStudents = async (teachers: string[]): Promise<string[]> => {
-  if (!Array.isArray(teachers) || teachers.length === 0) {
-    throw new errorHandlerMiddleware.AppError(
-      400,
-      "At least one teacher is required",
-    );
-  }
-
   const normalizedTeachers = teachers.map((teacher) => normalizeEmail(teacher));
-  if (normalizedTeachers.some((teacher) => !isValidEmail(teacher))) {
-    throw new errorHandlerMiddleware.AppError(400, "Invalid teacher email");
-  }
 
   const connection = await pool.getConnection();
   try {
@@ -105,9 +78,6 @@ const getCommonStudents = async (teachers: string[]): Promise<string[]> => {
 
 const suspendStudent = async (student: string): Promise<void> => {
   const normalizedStudent = normalizeEmail(student);
-  if (!isValidEmail(normalizedStudent)) {
-    throw new errorHandlerMiddleware.AppError(400, "Invalid student email");
-  }
 
   const connection = await pool.getConnection();
   try {
@@ -131,9 +101,6 @@ const getNotificationRecipients = async (
   mentionedEmails: string[],
 ): Promise<string[]> => {
   const normalizedTeacher = normalizeEmail(teacher);
-  if (!isValidEmail(normalizedTeacher)) {
-    throw new errorHandlerMiddleware.AppError(400, "Invalid teacher email");
-  }
 
   const connection = await pool.getConnection();
   try {

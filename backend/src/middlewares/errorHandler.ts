@@ -19,15 +19,31 @@ export function notFoundHandler(
 
 export function errorHandler(
   err: Error | AppError,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction,
 ): void {
+  // Log all errors for debugging
+  // eslint-disable-next-line no-console
+  console.error(`[${new Date().toISOString()}]`, {
+    method: req.method,
+    url: req.originalUrl,
+    message: err.message,
+    stack: err.stack,
+  });
+
   if (err instanceof AppError) {
-    res.status(err.statusCode).json({ message: err.message });
+    // Client errors (4xx)
+    if (err.statusCode >= 400 && err.statusCode < 500) {
+      res.status(err.statusCode).json({ message: err.message });
+      return;
+    }
+    // Server errors (5xx)
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 
+  // Unhandled errors
   res.status(500).json({ message: "Internal server error" });
 }
 

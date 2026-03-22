@@ -5,6 +5,10 @@
 backend/dist/
 frontend/dist/
 
+# test outputs
+backend/coverage/
+frontend/coverage/
+
 # environment
 .env
 backend/.env.local
